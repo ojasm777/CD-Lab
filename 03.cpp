@@ -158,20 +158,17 @@ int main()
     TokenAnalyzer analyzer;
 
     string sampleCode = R"(
-        int main() {
-            int x = 10;
-            float y = 3.14;
-            char z = 'a';
-            
-            if (x > 5) {
-                return x + 20;
-            }
-            
-            return 0;
-        }
-    )";
+          int main() {
+              int x = 10;  
+              
+              if (x > 5) {
+                  return x + 20;
+              }
+              
+              return 0;
+          }
+      )";
 
     analyzer.analyzeTokens(sampleCode);
-
     return 0;
 }

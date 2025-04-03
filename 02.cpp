@@ -1,96 +1,56 @@
 #include <iostream>
-#include <vector>
-#include <string>
-#include <unordered_map>
-using namespace std;
+#include <map>
+#include <set>
 
-struct PairHash
-{
-    template <class T1, class T2>
-    unsigned int operator()(const pair<T1, T2> &p) const
-    {
-        unsigned int h1 = hash<T1>{}(p.first);
-        unsigned int h2 = hash<T2>{}(p.second);
-        return h1 ^ (h2 << 1);
-    }
-};
+using namespace std;
 
 class DFA
 {
-private:
-    int numStates;
-    int startState;
-    vector<int> finalStates;
-    unordered_map<pair<int, char>, int, PairHash> transitions;
-
 public:
-    DFA(int states, int start) : numStates(states), startState(start) {}
+    map<int, map<char, int>> transition;
+    int startState;
+    set<int> acceptStates;
 
-    void addTransition(int fromState, char symbol, int toState)
+    void addTransition(int from, char symbol, int to)
     {
-        transitions[{fromState, symbol}] = toState;
+        transition[from][symbol] = to;
     }
 
-    void addFinalState(int state)
-    {
-        finalStates.push_back(state);
-    }
-
-    bool isAcceptState(int state)
-    {
-        for (int finalState : finalStates)
-        {
-            if (state == finalState)
-                return true;
-        }
-        return false;
-    }
-
-    bool acceptsString(const string &input)
+    bool isAccepted(string input)
     {
         int currentState = startState;
-
         for (char symbol : input)
         {
-            auto transition = transitions.find({currentState, symbol});
-
-            if (transition == transitions.end())
+            if (transition[currentState].count(symbol))
             {
-                return false;
+                currentState = transition[currentState][symbol];
             }
-
-            currentState = transition->second;
+            else
+            {
+                return false; // Invalid transition, reject input
+            }
         }
-
-        return isAcceptState(currentState);
+        return acceptStates.count(currentState);
     }
 };
 
 int main()
 {
-    DFA dfa(4, 0);
+    DFA dfa;
+    dfa.startState = 0;
+    dfa.acceptStates = {2};
 
-    dfa.addTransition(0, '0', 1);
-    dfa.addTransition(0, '1', 0);
-    dfa.addTransition(1, '0', 2);
-    dfa.addTransition(1, '1', 0);
-    dfa.addTransition(2, '0', 2);
-    dfa.addTransition(2, '1', 3);
-    dfa.addTransition(3, '0', 2);
-    dfa.addTransition(3, '1', 3);
+    dfa.addTransition(0, 'a', 1);
+    dfa.addTransition(1, 'b', 2);
+    dfa.addTransition(2, 'a', 2); // Allows looping in final state
 
-    dfa.addFinalState(3);
+    string input;
+    cout << "Enter input string: ";
+    cin >> input;
 
-    string testStrings[] = {
-        "0110", "1001", "00110", "101010", "111", "000"};
-
-    for (const auto &str : testStrings)
-    {
-        cout << "String: " << str
-             << " - "
-             << (dfa.acceptsString(str) ? "Accepted" : "Rejected")
-             << endl;
-    }
-
+    if (dfa.isAccepted(input))
+        cout << "Accepted\n";
+    else
+        cout << "Rejected\n";
     return 0;
 }
